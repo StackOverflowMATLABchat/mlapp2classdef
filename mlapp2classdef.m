@@ -18,7 +18,7 @@ end
 fclose(fID);
 
 % Strip out header & footer, then save to a *.m file
-A = regexprep(A, '(^.*)(?=classdef)|(?<=end)(.*$)', '');
+A = regexprep(A, '(^.*)(?=classdef)|(?<=end)(.*$)', '');  % TODO: Fix the second regex now that A is a cell array and not 1 string
 
 fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
 for ii = 1:length(A)
