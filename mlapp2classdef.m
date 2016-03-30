@@ -11,7 +11,13 @@ unzip(fullfile(pathname, filename), tmpdir);
 xmlfile = fullfile(tmpdir, 'matlab', 'document.xml');
 nlines = countlines(xmlfile);
 fID = fopen(xmlfile, 'r');
-A = cell(nlines, 1);
+
+if ~isempty(nlines)
+    A = cell(nlines, 1);
+else
+    A = {};
+end
+
 ii = 1;
 while ~feof(fID)
     A{ii} = fgetl(fID);
@@ -35,6 +41,7 @@ function nlines = countlines(filepath)
 % Utilize OS-specific routines to count the number of lines present in the
 % specified file.
 % filepath should be an absolute path
+% Returns an empty array if OS is not supported
 
 myOS = upper(computer);  % Should already be uppercase, force it to be sure
 
@@ -51,18 +58,21 @@ switch myOS
         delete('countlines.pl');
     case 'GLNXA64'
         % Linux systems
-        error('mlapp2classdef:UnsupportedOS', ...
+        warning('mlapp2classdef:UnsupportedOS', ...
               'OS currently unsupported: ''%s''', myOS ...
               );
+        nlines = [];
     case 'MACI64'
         % Mac OS systems
-        error('mlapp2classdef:UnsupportedOS', ...
+        warning('mlapp2classdef:UnsupportedOS', ...
               'OS currently unsupported: ''%s''', myOS ...
               );
+        nlines = [];
     otherwise
         % Unknown/unsupported OS
-        error('mlapp2classdef:UnsupportedOS', ...
+        warning('mlapp2classdef:UnsupportedOS', ...
               'OS currently unsupported: ''%s''', myOS ...
               );
+        nlines = [];
 end
 end
