@@ -60,36 +60,14 @@ rmdir(tmpdir, 's');
 end
 
 function nlines = countlines(filepath)
-% Utilize OS-specific routines to count the number of lines present in the
-% specified file.
+% Count the number of lines present in the specified file.
 % filepath should be an absolute path
-% Returns an empty array if OS is not supported
+fID = fopen(filepath, 'rt');
 
-myOS = upper(computer);  % Should already be uppercase, force it to be sure
-
-switch myOS
-    case {'PCWIN', 'PCWIN64'}
-        % Windows systems
-        disp('Creating temporary Perl script in current working directory')
-        temp_fID = fopen('countlines.pl','w');
-        line1 = 'while (<>){};';
-        line2 = 'print $.,"\n"';
-        fprintf(temp_fID,'%s\n%s',line1,line2);
-        fclose(temp_fID);
-        nlines = str2double(perl('countlines.pl',filepath));
-        delete('countlines.pl');
-    case {'GLNXA64', 'MACI64'}
-        % Linux and Linux-ish (Mac) systems
-        [~, cmdout] = system(sprintf('wc -l < "%s"', filepath));
-        nlines = str2double(cmdout);
-        if isnan(nlines)
-            nlines = [];
-        end
-    otherwise
-        % Unknown/unsupported OS
-        warning('mlapp2classdef:UnsupportedOS', ...
-                'Line counting currently unsupported in OS ''%s''', myOS ...
-                );
-        nlines = [];
+nlines = 0;
+while ~feof(fID)
+    nlines = nlines + sum(fread(fID, 16384, 'char') == char(10));
 end
+
+fclose(fID);
 end
