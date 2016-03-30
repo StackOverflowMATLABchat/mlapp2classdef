@@ -8,8 +8,10 @@ unzip(fullfile(pathname, filename), tmpdir);
 % Read in XML file
 % Since there isn't really much XML-ness to this XML file, no need to
 % utilize a full-fledged parser. MATLAB's won't open it anyway...
-fID = fopen(fullfile(tmpdir, 'matlab', 'document.xml'), 'r');  % TODO: Add recursive file search, make sure no other filenames are possible
-A = {};  % TODO: Implement better preallocation
+xmlfile = fullfile(tmpdir, 'matlab', 'document.xml');
+nlines = countlines(xmlfile);
+fID = fopen(xmlfile, 'r');
+A = cell(nlines, 1);
 ii = 1;
 while ~feof(fID)
     A{ii} = fgetl(fID);
@@ -18,7 +20,7 @@ end
 fclose(fID);
 
 % Strip out header & footer, then save to a *.m file
-A = regexprep(A, '(^.*)(?=classdef)|(?<=end)(.*$)', '');  % TODO: Fix the second regex now that A is a cell array and not 1 string
+A = regexprep(A, '(^.*)(?=classdef)|(?<=end)(.*$)', '');
 
 fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
 for ii = 1:length(A)
@@ -27,4 +29,40 @@ end
 fclose(fID);
 
 rmdir(tmpdir, 's');
+end
+
+function nlines = countlines(filepath)
+% Utilize OS-specific routines to count the number of lines present in the
+% specified file.
+% filepath should be an absolute path
+
+myOS = upper(computer);  % Should already be uppercase, force it to be sure
+
+switch myOS
+    case {'PCWIN', 'PCWIN64'}
+        % Windows systems
+        disp('Creating temporary Perl script in current working directory')
+        temp_fID = fopen('countlines.pl','w');
+        line1 = 'while (<>){};';
+        line2 = 'print $.,"\n"';
+        fprintf(temp_fID,'%s\n%s',line1,line2);
+        fclose(temp_fID);
+        nlines = str2double(perl('countlines.pl',filepath));
+        delete('countlines.pl');
+    case 'GLNXA64'
+        % Linux systems
+        error('mlapp2classdef:UnsupportedOS', ...
+              'OS currently unsupported: ''%s''', myOS ...
+              );
+    case 'MACI64'
+        % Mac OS systems
+        error('mlapp2classdef:UnsupportedOS', ...
+              'OS currently unsupported: ''%s''', myOS ...
+              );
+    otherwise
+        % Unknown/unsupported OS
+        error('mlapp2classdef:UnsupportedOS', ...
+              'OS currently unsupported: ''%s''', myOS ...
+              );
+end
 end
