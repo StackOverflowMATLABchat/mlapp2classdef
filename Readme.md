@@ -12,4 +12,4 @@ MLAPP2CLASSDEF assumes that the targeted `*.mlapp` file is a GUI created by MATL
 
 Structure of the packaged `*.mlapp` file is assumed to be a constant (e.g. `~\matlab\document.xml` is the path to the class definition XML)
 
-For ease of output formatting, the XML file is read line-by-line into a cell array. Preallocation of this cell array is currently only supported for Windows operating systems. All other operating systems will grow this array in memory as the file is read in, resulting in a potentially significant performance decrease.
+In order to preallocate the cell array to contain the lines of the XML file to be parsed, an OS-specific `system` call is made that utilizes external tools for speed. Perl is used on Windows and `wc` is used for Linux and Mac. Users on Linux and Mac are advised that the output of MATLAB's `system` call can potentially be contaminated while running if the user types text into the command window while the function is running. Alternative implementations are being investigated, but in the meantime users are advised to refrain from mashing the keyboard.
