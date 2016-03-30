@@ -80,16 +80,18 @@ switch myOS
         delete('countlines.pl');
     case 'GLNXA64'
         % Linux systems
-        warning('mlapp2classdef:UnsupportedOS', ...
-                'Line counting currently unsupported in OS ''%s''', myOS ...
-                );
-        nlines = [];
+        [~, cmdout] = system(sprintf('wc -l < "%s"', filepath));
+        nlines = str2double(cmdout);
+        if isnan(nlines)
+            nlines = [];
+        end
     case 'MACI64'
         % Mac OS systems
-        warning('mlapp2classdef:UnsupportedOS', ...
-                'Line counting currently unsupported in OS ''%s''', myOS ...
-                );
-        nlines = [];
+        [~, cmdout] = system(sprintf('wc -l < "%s"', filepath));
+        nlines = str2double(cmdout);
+        if isnan(nlines)
+            nlines = [];
+        end
     otherwise
         % Unknown/unsupported OS
         warning('mlapp2classdef:UnsupportedOS', ...
