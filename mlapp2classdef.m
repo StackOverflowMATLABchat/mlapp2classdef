@@ -48,7 +48,7 @@ end
 fclose(fID);
 
 % Strip out header & footer, then save to a *.m file
-A = regexprep(A, '(^.*)(?=classdef)|(?<=end)(.*$)', '');
+A = regexprep(A, '(^.*)(?=classdef)|(?<=end)(\].*$)', '');
 
 fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
 for ii = 1:length(A)
@@ -81,20 +81,20 @@ switch myOS
     case 'GLNXA64'
         % Linux systems
         warning('mlapp2classdef:UnsupportedOS', ...
-              'Line counting currently unsupported in OS ''%s''', myOS ...
-              );
+                'Line counting currently unsupported in OS ''%s''', myOS ...
+                );
         nlines = [];
     case 'MACI64'
         % Mac OS systems
         warning('mlapp2classdef:UnsupportedOS', ...
-              'Line counting currently unsupported in OS ''%s''', myOS ...
-              );
+                'Line counting currently unsupported in OS ''%s''', myOS ...
+                );
         nlines = [];
     otherwise
         % Unknown/unsupported OS
         warning('mlapp2classdef:UnsupportedOS', ...
-              'Line counting currently unsupported in OS ''%s''', myOS ...
-              );
+                'Line counting currently unsupported in OS ''%s''', myOS ...
+                );
         nlines = [];
 end
 end
