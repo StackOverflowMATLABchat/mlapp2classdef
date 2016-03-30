@@ -78,15 +78,8 @@ switch myOS
         fclose(temp_fID);
         nlines = str2double(perl('countlines.pl',filepath));
         delete('countlines.pl');
-    case 'GLNXA64'
-        % Linux systems
-        [~, cmdout] = system(sprintf('wc -l < "%s"', filepath));
-        nlines = str2double(cmdout);
-        if isnan(nlines)
-            nlines = [];
-        end
-    case 'MACI64'
-        % Mac OS systems
+    case {'GLNXA64', 'MACI64'}
+        % Linux and Linux-ish (Mac) systems
         [~, cmdout] = system(sprintf('wc -l < "%s"', filepath));
         nlines = str2double(cmdout);
         if isnan(nlines)
