@@ -1,5 +1,5 @@
-function mlapp2classdef()
-% MLAPP2CLASSDEF() prompts the user to select an App Designer GUI, packaged
+function mlapp2classdef(pathToMlapp)
+% MLAPP2CLASSDEF prompts the user to select an App Designer GUI, packaged
 % as an *.mlapp file, and converts the GUI's class definition from an XML 
 % file to a standalone *.m file.
 %
@@ -18,9 +18,30 @@ if verLessThan('matlab', '7.9')
           );
 end
 
+% Handle file selection:
+if nargin == 0
   [filename, pathname] = uigetfile('*.mlapp', 'Select MATLAB App');
   [~, appname] = fileparts(filename);
+else  
+  validateattributes(pathToMlapp,{'char','cell'},{'vector'}); 
+  if iscell(pathToMlapp)
+    [pathname,appname,ext] = cellfun(@fileparts,pathToMlapp,'UniformOutput',false);  
+  else
+    [pathname,appname,ext] = fileparts(pathToMlapp);  
+  end
+  filename = strcat(appname,ext);
+end
+
+if iscell(pathToMlapp)
+  for indF = 1:numel(pathToMlapp)
+    processMlapp(pathname{indF}, filename{indF}, appname{indF});
+    % TODO: Add a counter of successfully converted files.
+  end
+else
   processMlapp(pathname, filename, appname);
+end
+
+end
 
 function processMlapp(pathname, filename, appname)
 % Unzip user selected MATLAB App, which are packaged in a renamed zip file
