@@ -18,9 +18,12 @@ if verLessThan('matlab', '7.9')
           );
 end
 
+  [filename, pathname] = uigetfile('*.mlapp', 'Select MATLAB App');
+  [~, appname] = fileparts(filename);
+  processMlapp(pathname, filename, appname);
+
+function processMlapp(pathname, filename, appname)
 % Unzip user selected MATLAB App, which are packaged in a renamed zip file
-[filename, pathname] = uigetfile('*.mlapp', 'Select MATLAB App');
-[~, appname] = fileparts(filename);
 tmpdir = fullfile(pathname, sprintf('%s_tmp', appname));
 unzip(fullfile(pathname, filename), tmpdir);
 
@@ -57,6 +60,8 @@ end
 fclose(fID);
 
 rmdir(tmpdir, 's');
+
+disp(['Successfully unpacked ' filename '!']);
 end
 
 function nlines = countlines(filepath)
