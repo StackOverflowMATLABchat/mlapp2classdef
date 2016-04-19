@@ -12,7 +12,7 @@ function mlapp2classdef()
 % MLAPP2CLASSDEF assumes that the targeted *.mlapp file is a GUI created by
 % MATLAB's App Designer. Other packaged apps are not explicitly supported.
 
-if verlessthan('matlab', '7.9')
+if verLessThan('matlab', '7.9')
     error('mlapp2classdef:UnsupportedMATLABver', ...
           'MATLAB releases prior to R2009b are not supported' ...
           );
