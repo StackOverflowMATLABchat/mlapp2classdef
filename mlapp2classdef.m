@@ -72,7 +72,7 @@ end
 fclose(fID);
 
 % Strip out header & footer, then save to a *.m file
-A = regexprep(A, '(^.*)(?=classdef)|(?<=end)(\].*$)', '');
+A([1,end]) = regexprep(A([1,end]), '(^.*)(?=classdef)|(?<=end)(\].*$)', '');
 
 fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
 for ii = 1:length(A)
