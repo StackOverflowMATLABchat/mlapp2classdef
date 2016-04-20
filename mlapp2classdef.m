@@ -29,10 +29,17 @@ if nargin == 0
     % No input selected, prompt user to select a MATLAB app to process
     % Currently limited to single file selection
     [filename, pathname] = uigetfile('*.mlapp', 'Select MATLAB App');
-    [~, appname] = fileparts(filename);
+    if ~filename
+        error('mlapp2classdef:NoFileSelected', 'No file selected, exiting...');
+    else
+        [~, appname, ext] = fileparts(filename);
+    end
 else
-    % TODO: Refactor to more verbose error generation
-    validateattributes(pathToMLapp, {'char', 'cell'}, {'vector'});
+    % Wrap validateattributes for more verbose error handling
+    % validateattributes won't catch if the cell array contains
+    % non-strings, but the subsequent fileparts call will error if these
+    % are encountered
+    pathToMLapp = validateattributes_wrapped(pathToMLapp, {'char', 'cell'}, {'vector'});
     if iscell(pathToMLapp)
         [pathname, appname, ext] = cellfun(@fileparts, pathToMLapp, 'UniformOutput', false);
     else
@@ -43,11 +50,12 @@ end
 
 if iscell(pathToMLapp)
     for indF = 1:numel(pathToMLapp)
-        % TODO: Check for existence of file
+        checkfile(pathname{indF}, filename{indF}, ext{indF});
         processMlapp(pathname{indF}, filename{indF}, appname{indF});
         % TODO: Add a counter of successfully converted files.
     end
 else
+    checkfile(pathname, filename, ext);
     processMlapp(pathname, filename, appname);
 end
 
@@ -96,6 +104,53 @@ rmdir(tmpdir, 's');
 
 disp(['Successfully unpacked ' filename '!']);
 end
+
+
+function A = validateattributes_wrapped(A, classes, attributes)
+% Wrap validateattributes with try-catch block for more verbose error
+% handling
+try 
+    validateattributes(A, classes, attributes)
+catch err
+    switch err.identifier
+        case 'MATLAB:invalidType'
+            newerr.identifier = 'mlapp2classdef:InvalidInputType';
+            newerr.message = sprintf('Invalid input type: %s\nExpected: char, cell', class(A));
+            newerr.cause = err.cause;
+            newerr.stack = err.stack;
+            error(newerr);
+        case 'MATLAB:expectedVector'
+            % Warn and reshape
+            sizestr = sprintf('%u,', size(A));
+            sizestr = sizestr(1:end-1);  % Strip trailing comma
+            warning('mlapp2classdef:InvalidInputShape', ...
+                    'Input cell array must be a vector of cells. Size of input array is: [%s]. Reshaping...', ...
+                    sizestr ...
+                    );
+            A = reshape(A, 1, []);
+        otherwise
+            rethrow err
+    end
+end
+end
+
+
+function checkfile(pathname, filename, ext)
+% Check for existence of file
+if exist(fullfile(pathname, filename), 'file')
+    % Check for correct file type
+    if ~strcmp(ext, '.mlapp')
+        error('mlapp2classdef:InvalidFileType', ...
+            '''%s'' is not a *.mlapp file', fullfile(pathname, filename) ...
+            );
+    end
+else
+    error('mlapp2classdef:FileNotFound', ...
+        '''%s'' does not exist', fullfile(pathname, filename) ...
+        );
+end
+end
+
 
 function nlines = countlines(filepath)
 % Count the number of lines present in the specified file.
