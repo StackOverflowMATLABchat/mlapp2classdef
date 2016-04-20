@@ -1,7 +1,6 @@
 function mlapp2classdef(pathToMLapp)
-% MLAPP2CLASSDEF an App Designer GUI, packaged as an *.mlapp file, and
-% converts the GUI's class definition from an XML file to a standalone *.m 
-% file.
+% MLAPP2CLASSDEF converts an App Designer GUI's class definition, packaged 
+% as a *.mlapp file, from XML to a standalone *.m class definition.
 %
 % MLAPP2CLASSDEF() prompts the user to select a single *.mlapp file for
 % processing
