@@ -2,9 +2,28 @@
 
 # mlapp2classdef
 
-MLAPP2CLASSDEF prompts the user to select an App Designer GUI, packaged as an `*.mlapp` file, and converts the GUI's class definition from an XML file to a standalone `*.m` file. Alternatively, it is possible to pass into the function a full path to an `*.mlapp` file or a cell vector of paths for e.g. batch conversion.
+MLAPP2CLASSDEF converts an App Designer GUI's class definition, packaged as a `*.mlapp` file, from XML to a standalone `*.m` class definition.
 
 The class definition for an App Designer GUI is embedded in an XML file located in a subfolder of the packaged `*.mlapp` file, which can be accessed like a `*.zip` file. MLAPP2CLASSDEF strips the XML header & footer and saves the class definition to a `*.m` file located in the same path as the `*.mlapp` file.
+
+## Syntax
+
+`MLAPP2CLASSDEF()` prompts the user to select a single `*.mlapp` file for processing
+
+`MLAPP2CLASSDEF(pathToMLapp)` processes the files specified by the user. `pathToMLapp` can be a string for a single file or a cell array of strings for multiple files. Filepaths should be absolute.
+
+### Examples
+
+    # MATLAB prompts user for file to processe
+    mlapp2classdef()
+
+    # Process single user specified file:
+    myguipath = 'C:\myfolder\mygui.mlapp';
+    mlapp2classdef(myguipath)
+
+    # Process multiple user specified files:
+    myguipaths = {'C:\myfolder\mygui.mlapp', 'C:\myfolder\mygui2.mlapp'};
+    mlapp2classdef(myguipaths)
 
 # Current Limitations
 
