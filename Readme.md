@@ -40,20 +40,20 @@ MLAPP2CLASSDEF assumes that the targeted `*.mlapp` file is a GUI created by MATL
 
 Structure of the packaged `*.mlapp` file is assumed to be a constant (e.g. `~\matlab\document.xml` is the path to the class definition XML)
 
-Replacement of App Designer specific GUI elements with their "regular" MATLAB equivalents is a work in progress. See the below table for a description of UI element support.
+Replacement of App Designer specific GUI elements with their "regular" MATLAB equivalents is a work in progress. See the below table for a description of UI element support. Conversion does not take into account object properties introduced in R2016a.
 
 UI Element    | App Designer Function | "Regular" MATLAB Function            | Conversion Supported | Caveats
-:-----------: | :-------------------: | :----------------------------------: | :------------------: | :-----:
-Figure        | `uifigure`            | `figure`                             | No                   | N/A    
-Axes          | `uiaxes`              | `axes`                               | No                   | N/A    
-Button        | `uibutton`            | `uicontrol('Style', 'pushbutton')`   | No                   | N/A    
-Checkbox      | `uicheckbox`          | `uicontrol('Style', 'checkbox')`     | No                   | N/A    
-Edit Box      | `uieditfield`         | `uicontrol('Style', 'edit')`         | No                   | N/A    
-Text Label    | `uilabel`             | `uicontrol('Style', 'text')`         | No                   | N/A    
-List Box      | `uilistbox`           | `uicontrol('Style', 'listbox')`      | No                   | N/A    
-Radio Button  | `uiradiobutton`       | `uicontrol('Style', 'radiobutton')`  | No                   | N/A    
-Slider        | `uislider`            | `uicontrol('Style', 'slider')`       | No                   | N/A    
-Toggle Button | `uitogglebutton`      | `uicontrol('Style', 'togglebutton')` | No                   | N/A    
+:------------ | :-------------------- | :----------------------------------- | :------------------: | :------
+Figure        | `uifigure`            | `figure`                             | Yes                  | Does not modify any input parameters
+Axes          | `uiaxes`              | `axes`                               | Yes                  | Does not modify any input parameters
+Button        | `uibutton`            | `uicontrol('Style', 'pushbutton')`   | Yes                  | Modifies inputs, assumes only App Designer input is parent object
+Checkbox      | `uicheckbox`          | `uicontrol('Style', 'checkbox')`     | Yes                  | Modifies inputs, assumes only App Designer input is parent object
+Edit Box      | `uieditfield`         | `uicontrol('Style', 'edit')`         | Yes                  | Modifies inputs, assumes only App Designer input is parent object
+Text Label    | `uilabel`             | `uicontrol('Style', 'text')`         | Yes                  | Modifies inputs, assumes only App Designer input is parent object
+List Box      | `uilistbox`           | `uicontrol('Style', 'listbox')`      | Yes                  | Modifies inputs, assumes only App Designer input is parent object
+Radio Button  | `uiradiobutton`       | `uicontrol('Style', 'radiobutton')`  | Yes                  | Modifies inputs, assumes only App Designer input is parent object
+Slider        | `uislider`            | `uicontrol('Style', 'slider')`       | Yes                  | Modifies inputs, assumes only App Designer input is parent object
+Toggle Button | `uitogglebutton`      | `uicontrol('Style', 'togglebutton')` | Yes                  | Modifies inputs, assumes only App Designer input is parent object
 Spinner       | `uispinner`           | N/A                                  | No                   | N/A    
 Text Area     | `uitextarea`          | N/A                                  | No                   | N/A    
 Gauge         | `uigauge`             | N/A                                  | No                   | N/A    
@@ -61,3 +61,5 @@ Knob          | `uiknob`              | N/A                                  | N
 Lamp          | `uilamp`              | N/A                                  | No                   | N/A    
 Switch        | `uiswitch`            | N/A                                  | No                   | N/A    
 UI Alert      | `uialert`             | N/A                                  | No                   | N/A    
+
+Converted GUIs will likely still require MATLAB R2014b and newer. MATLAB's App Designer heavily utilizes the dot notation for accessing properties of UI elements rather than using `set` and `get`. See [Graphics Handles Are Now Objects, Not Doubles](http://www.mathworks.com/help/matlab/graphics_transition/graphics-handles-are-now-objects-not-doubles.html) for more information.

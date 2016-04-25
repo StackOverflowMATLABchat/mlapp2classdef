@@ -238,12 +238,52 @@ end
 
 function [regexdict] = genregexdict()
 % Build structure of regular expressions to swap function calls
-regexdict.Figure.expression = 'uifigure';
-regexdict.Figure.replace    = 'figure';
 
-regexdict.Axes.expression = 'uiaxes';
-regexdict.Axes.replace    = 'axes';
+% Replace uifigure with figure, make no changes to function inputs
+regexdict.figureObj.expression = 'uifigure';
+regexdict.figureObj.replace    = 'figure';
 
-regexdict.Axes.expression = 'uiaxes';
-regexdict.Axes.replace    = 'axes';
+% Replace uiaxes with axes, make no changes to function inputs
+regexdict.axesObj.expression = 'uiaxes';
+regexdict.axesObj.replace    = 'axes';
+
+% Replace uibutton with pushbutton uicontrol, assume only UIfunction input 
+% is the parent object
+regexdict.pushbuttonObj.expression = '(uibutton)\((.*)\)';
+regexdict.pushbuttonObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''pushbutton'')';
+
+% Replace uicheckbox with checkbox uicontrol, assume only UIfunction input 
+% is the parent object
+regexdict.checkboxObj.expression = '(uicheckbox)\((.*)\)';
+regexdict.checkboxObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''checkbox'')';
+
+% Replace uieditfield with edit uicontrol, assume only UIfunction input is 
+% the parent object
+regexdict.editboxObj.expression = '(uieditfield)\((.*)\)';
+regexdict.editboxObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''edit'')';
+
+% Replace uilabel with text uicontrol, assume only UIfunction input is the
+% parent object
+regexdict.textObj.expression = '(uilabel)\((.*)\)';
+regexdict.textObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''text'')';
+
+% Replace uilistbox with listbox uicontrol, assume only UIfunction input
+% is the parent object
+regexdict.listboxObj.expression = '(uilistbox)\((.*)\)';
+regexdict.listboxObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''listbox'')';
+
+% Replace uiradiobutton with radiobutton uicontrol, assume only UIfunction 
+% input is the parent object
+regexdict.radiobuttonObj.expression = '(uiradiobutton)\((.*)\)';
+regexdict.radiobuttonObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''radiobutton'')';
+
+% Replace uislider with slider uicontrol, assume only UIfunction input is
+% the parent object
+regexdict.siderObj.expression = '(uislider)\((.*)\)';
+regexdict.sliderObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''slider'')';
+
+% Replace uitogglebutton with pushbutton uicontrol, assume only UIfunction 
+% input is the parent object
+regexdict.togglebuttonObj.expression = '(uitogglebutton)\((.*)\)';
+regexdict.togglebuttonObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''togglebutton'')';
 end
