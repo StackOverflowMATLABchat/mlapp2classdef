@@ -23,10 +23,13 @@ function mlapp2classdef(pathToMLapp, varargin)
 %
 % MLAPP2CLASSDEF assumes that the targeted *.mlapp file is a GUI created by
 % MATLAB's App Designer. Other packaged apps are not explicitly supported.
+%
+% GUIs converted utilizing this method will likely require R2014b or newer 
+% to support addressing UI object properties using dot notation
 
-if verLessThan('matlab', '7.9')
+if verLessThan('matlab', '8.2')
     error('mlapp2classdef:UnsupportedMATLABver', ...
-          'MATLAB releases prior to R2009b are not supported' ...
+          'MATLAB releases prior to R2013b are not supported' ...
           );
 end
 
@@ -58,23 +61,17 @@ else
     filename = strcat(appname, ext);
 end
 
-% Check varargin for optional processing flags
-% Placeholder logic to be replaced by inputparser instance
-if isempty(varargin)
-    uielementflag = false;
-else
-    uielementflag = false;
-end
+optionflags = checkflags(varargin);
 
 if iscell(pathToMLapp)
     for indF = 1:numel(pathToMLapp)
         checkfile(pathname{indF}, filename{indF}, ext{indF});
-        processapp(pathname{indF}, filename{indF}, appname{indF}, uielementflag)
+        processapp(pathname{indF}, filename{indF}, appname{indF}, optionflags)
         % TODO: Add a counter of successfully converted files.
     end
 else
     checkfile(pathname, filename, ext);
-    processapp(pathname, filename, appname, uielementflag)
+    processapp(pathname, filename, appname, optionflags)
 end
 
 end
@@ -109,6 +106,27 @@ end
 end
 
 
+function [optionflags] = checkflags(inputargs)
+% Check main function varargin for optional processing flags
+% Output a structure of flags with their values
+if isempty(inputargs)
+    % If no flags are input, utilize defaults
+    optionflags.ReplaceAppUI = false;
+else
+    p = inputParser();
+    p.FunctionName = 'mlapp2classdef';  % Throw errors as mlapp2classdef
+    p.KeepUnmatched = true;  % Keeps unmatched N-V pairs and suppresses the error
+    
+    % Add our NV pairs
+    addParameter(p, 'ReplaceAppUI', false, @islogical)
+    
+    % Parse function inputs and return results
+    parse(p, inputargs{:});
+    optionflags = p.Results;
+end
+end
+
+
 function checkfile(pathname, filename, ext)
 % Check for existence of file
 if exist(fullfile(pathname, filename), 'file')
@@ -131,8 +149,18 @@ tmpdir = unpackapp(pathname, filename, appname);
 rawXML = loadXML(tmpdir);
 mymcode = stripXML(rawXML);
 
-if uielementflag
+if uielementflag.ReplaceAppUI
     % Convert App Designer UI elements to "regular" MATLAB UI elements
+    regexdict = genregexdict();
+    
+    % As a starting point the UI elements will be addressed on an
+    % individual basis.
+    functionstoswap = fieldnames(regexdict);
+    for ii = 1:length(functionstoswap)
+        expression = regexdict.(functionstoswap{ii}).expression;
+        replace = regexdict.(functionstoswap{ii}).replace;
+        mymcode = regexprep(mymcode, expression, replace);
+    end
 end
 
 writemfile(mymcode, pathname, appname);
@@ -194,7 +222,7 @@ fclose(fID);
 end
 
 
-function nlines = countlines(filepath)
+function [nlines] = countlines(filepath)
 % Count the number of lines present in the specified file.
 % filepath should be an absolute path
 fID = fopen(filepath, 'rt');
@@ -205,4 +233,17 @@ while ~feof(fID)
 end
 
 fclose(fID);
+end
+
+
+function [regexdict] = genregexdict()
+% Build structure of regular expressions to swap function calls
+regexdict.Figure.expression = 'uifigure';
+regexdict.Figure.replace    = 'figure';
+
+regexdict.Axes.expression = 'uiaxes';
+regexdict.Axes.replace    = 'axes';
+
+regexdict.Axes.expression = 'uiaxes';
+regexdict.Axes.replace    = 'axes';
 end
