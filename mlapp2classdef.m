@@ -1,4 +1,4 @@
-function mlapp2classdef(pathToMLapp)
+function mlapp2classdef(pathToMLapp, varargin)
 % MLAPP2CLASSDEF converts an App Designer GUI's class definition, packaged 
 % as a *.mlapp file, from XML to a standalone *.m class definition.
 %
@@ -8,6 +8,12 @@ function mlapp2classdef(pathToMLapp)
 % MLAPP2CLASSDEF(pathToMLapp) processes the files specified by the user.
 % pathToMLapp can be a string for a single file or a cell array of strings
 % for multiple files. Filepaths should be absolute.
+%
+% MLAPP2CLASSDEF(..., 'ReplaceAppUI', flag) replaces App Designer UI
+% elements with their "regular" MATLAB equivalents (e.g. App Designer uses
+% UIFIGURE where MATLAB uses FIGURE). flag is a boolean value, the default
+% is false. To prompt the user to select an app file with this syntax, pass
+% an empty first argument (e.g. MLAPP2CLASSDEF([], 'ReplaceAppUI', True)).
 %
 % The class definition for an App Designer GUI is embedded in an XML file
 % located in a subfolder of the packaged *.mlapp file, which can be
@@ -25,13 +31,17 @@ if verLessThan('matlab', '7.9')
 end
 
 % Choose appropriate behavior based on number of inputs
-if nargin == 0
+if nargin == 0 || ~exist('pathToMLapp', 'var') || isempty(pathToMLapp)
     % No input selected, prompt user to select a MATLAB app to process
     % Currently limited to single file selection
-    [filename, pathname] = uigetfile('*.mlapp', 'Select MATLAB App');
+    [filename, pathname] = uigetfile('*.mlapp', 'Select MATLAB App', 'MultiSelect', 'on');
+    pathToMLapp = fullfile(pathname, filename);
     if ~filename
         error('mlapp2classdef:NoFileSelected', 'No file selected, exiting...');
     else
+        % uigetfile's multiselect doesn't currently allow to select files
+        % in different directories, so we can inherit the pathname(s) from
+        % the uigetfile call.
         [~, appname, ext] = fileparts(filename);
     end
 else
@@ -48,61 +58,25 @@ else
     filename = strcat(appname, ext);
 end
 
+% Check varargin for optional processing flags
+% Placeholder logic to be replaced by inputparser instance
+if isempty(varargin)
+    uielementflag = false;
+else
+    uielementflag = false;
+end
+
 if iscell(pathToMLapp)
     for indF = 1:numel(pathToMLapp)
         checkfile(pathname{indF}, filename{indF}, ext{indF});
-        processMlapp(pathname{indF}, filename{indF}, appname{indF});
+        processapp(pathname{indF}, filename{indF}, appname{indF}, uielementflag)
         % TODO: Add a counter of successfully converted files.
     end
 else
     checkfile(pathname, filename, ext);
-    processMlapp(pathname, filename, appname);
+    processapp(pathname, filename, appname, uielementflag)
 end
 
-end
-
-function processMlapp(pathname, filename, appname)
-% Unzip user selected MATLAB App, which are packaged in a renamed zip file
-tmpdir = fullfile(pathname, sprintf('%s_tmp', appname));
-unzip(fullfile(pathname, filename), tmpdir);
-
-% Read in XML file
-% Since there isn't really much XML-ness to this XML file, no need to
-% utilize a full-fledged parser. MATLAB's won't open it anyway...
-xmlfile = fullfile(tmpdir, 'matlab', 'document.xml');
-
-% Get a count of lines in the xml file to preallocate the cell array in
-% memory. If no count can be made, revert to growing the array in memory
-nlines = countlines(xmlfile);
-if ~isempty(nlines)
-    A = cell(nlines, 1);
-else
-    A = {};
-end
-
-% Read XML file line-by-line into a cell array to make later export simpler
-fID = fopen(xmlfile, 'r');
-ii = 1;
-while ~feof(fID)
-    A{ii} = fgetl(fID);
-    ii = ii + 1;
-end
-fclose(fID);
-
-% Strip out header & footer, then save to a *.m file
-% Limit search to first & last lines of file, currently all that is
-% modified by MATLAB to wrap the class definition in XML
-A([1,end]) = regexprep(A([1,end]), '(^.*)\[(?=classdef)|(?<=end)(\].*$)', '');
-
-fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
-for ii = 1:length(A)
-    fprintf(fID, '%s\n', A{ii});
-end
-fclose(fID);
-
-rmdir(tmpdir, 's');
-
-disp(['Successfully unpacked ' filename '!']);
 end
 
 
@@ -149,6 +123,74 @@ else
         '''%s'' does not exist', fullfile(pathname, filename) ...
         );
 end
+end
+
+
+function processapp(pathname, filename, appname, uielementflag)
+tmpdir = unpackapp(pathname, filename, appname);
+rawXML = loadXML(tmpdir);
+mymcode = stripXML(rawXML);
+
+if uielementflag
+    % Convert App Designer UI elements to "regular" MATLAB UI elements
+end
+
+writemfile(mymcode, pathname, appname);
+rmdir(tmpdir, 's');
+disp(['Successfully converted ' filename '!']);
+end
+
+
+function [tmpdir] = unpackapp(pathname, filename, appname)
+% Unzip user selected MATLAB App, which are packaged in a renamed zip file
+tmpdir = fullfile(pathname, sprintf('%s_tmp', appname));
+unzip(fullfile(pathname, filename), tmpdir);
+end
+
+
+function [rawXML] = loadXML(tmpdir)
+% Read in XML file
+% Since there isn't really much XML-ness to this XML file, no need to
+% utilize a full-fledged parser. MATLAB's won't open it anyway...
+xmlfile = fullfile(tmpdir, 'matlab', 'document.xml');
+
+% Get a count of lines in the xml file to preallocate the cell array in
+% memory. If no count can be made, revert to growing the array in memory
+nlines = countlines(xmlfile);
+if ~isempty(nlines)
+    rawXML = cell(nlines, 1);
+else
+    rawXML = {};
+end
+
+% Read XML file line-by-line into a cell array to make later export simpler
+fID = fopen(xmlfile, 'r');
+ii = 1;
+while ~feof(fID)
+    rawXML{ii} = fgetl(fID);
+    ii = ii + 1;
+end
+fclose(fID);
+end
+
+
+function [mymcode] = stripXML(rawXML)
+% Strip out XML header & footer
+% Limit search to first & last lines of file, currently all that is
+% modified by MATLAB to wrap the class definition in XML
+mymcode = rawXML;
+mymcode([1,end]) = regexprep(mymcode([1,end]), '(^.*)\[(?=classdef)|(?<=end)(\].*$)', '');
+end
+
+
+function writemfile(mymcode, pathname, appname)
+% Write a cell array of strings to a *.m file.
+% Assumes each cell is a separate line.
+fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
+for ii = 1:length(mymcode)
+    fprintf(fID, '%s\n', mymcode{ii});
+end
+fclose(fID);
 end
 
 
