@@ -280,10 +280,24 @@ regexdict.radiobuttonObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''ra
 % Replace uislider with slider uicontrol, assume only UIfunction input is
 % the parent object
 regexdict.siderObj.expression = '(uislider)\((.*)\)';
-regexdict.sliderObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''slider'')';
+regexdict.sliderObj.replace   = 'uicontrol(''Parent'', $2, ''Style'', ''slider'')';
 
 % Replace uitogglebutton with pushbutton uicontrol, assume only UIfunction 
 % input is the parent object
 regexdict.togglebuttonObj.expression = '(uitogglebutton)\((.*)\)';
 regexdict.togglebuttonObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''togglebutton'')';
+
+% Replace Value Changed callbacks with callback definition for "regular"
+% graphics objects
+regexdict.ValueChangedCallback.expression = '(\w+).ValueChangedFcn = createCallbackFcn\(\w+\, (.+)\)';
+regexdict.ValueChangedCallback.replace    = '$1.Callback = {$2}';
+
+% Replace Selection Changed callbacks with callback definition for 
+% "regular" graphics objects
+regexdict.SelectionChangedCallback.expression = '(\w+).SelectionChangedFcn = createCallbackFcn\(\w+\, (.+)\)';
+regexdict.SelectionChangedCallback.replace    = '$1.Callback = {$2}';
+
+% Remove App Designer registration
+regexdict.registerAppFcn.expression =  '(registerApp.*)';
+regexdict.registerAppFcn.replace    = '% Function call removed';
 end
