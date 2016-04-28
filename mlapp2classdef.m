@@ -279,7 +279,7 @@ regexdict.radiobuttonObj.replace    = 'uicontrol(''Parent'', $2, ''Style'', ''ra
 
 % Replace uislider with slider uicontrol, assume only UIfunction input is
 % the parent object
-regexdict.siderObj.expression = '(uislider)\((.*)\)';
+regexdict.sliderObj.expression = '(uislider)\((.*)\)';
 regexdict.sliderObj.replace   = 'uicontrol(''Parent'', $2, ''Style'', ''slider'')';
 
 % Replace uitogglebutton with pushbutton uicontrol, assume only UIfunction 
