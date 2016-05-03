@@ -145,9 +145,21 @@ end
 
 
 function processapp(pathname, filename, appname, uielementflag)
-tmpdir = unpackapp(pathname, filename, appname);
-rawXML = loadXML(tmpdir);
-mymcode = stripXML(rawXML);
+isolderthanR2014b = verLessThan('matlab', '8.4');
+if isolderthanR2014b
+    % *.mlapp is a *.zip file, extract the contents and strip out the XML
+    % from the classdef
+    tmpdir = unpackapp(pathname, filename, appname);
+    rawXML = loadXML(tmpdir);
+    mymcode = stripXML(rawXML);
+    rmdir(tmpdir, 's');
+else
+    % Beginning with R2014b MATLAB's type function supports *.mlapp files,
+    % so we can pipe the output to an external file rather then extract
+    % from the *.zip file
+    evalcstr = sprintf('type(''%s'')', fullfile(pathname, filename));
+    mymcode = evalc(evalcstr);
+end
 
 if uielementflag.ReplaceAppUI
     % Convert App Designer UI elements to "regular" MATLAB UI elements
@@ -163,8 +175,7 @@ if uielementflag.ReplaceAppUI
     end
 end
 
-writemfile(mymcode, pathname, appname);
-rmdir(tmpdir, 's');
+writemfile(mymcode, pathname, appname, isolderthanR2014b);
 disp(['Successfully converted ' filename '!']);
 end
 
@@ -211,12 +222,26 @@ mymcode([1,end]) = regexprep(mymcode([1,end]), '(^.*)\[(?=classdef)|(?<=end)(\].
 end
 
 
-function writemfile(mymcode, pathname, appname)
-% Write a cell array of strings to a *.m file.
-% Assumes each cell is a separate line.
+function writemfile(mymcode, pathname, appname, oldversionflag)
+% Write our m code to a file. Based on the MATLAB version used this will
+% either be in a cell array of strings (<R2014b) or a character array
+% (>=R2014b)
 fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
-for ii = 1:length(mymcode)
-    fprintf(fID, '%s\n', mymcode{ii});
+if oldversionflag
+    % MATLAB versions older than R2014b
+    % Write a cell array of strings to a *.m file
+    % Assumes each cell is a separate line
+    for ii = 1:length(mymcode)
+        fprintf(fID, '%s\n', mymcode{ii});
+    end
+else
+    % MATLAB versions R2014b and newer
+    % Write a character array to a *.m file
+    % Test for and strip out any leading whitespace characters
+    if isspace(mymcode(1))
+        mymcode(1) = [];
+    end
+    fprintf(fID, '%s', mymcode);
 end
 fclose(fID);
 end
