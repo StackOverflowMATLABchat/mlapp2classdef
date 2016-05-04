@@ -159,6 +159,12 @@ else
     % from the *.zip file
     evalcstr = sprintf('type(''%s'')', fullfile(pathname, filename));
     mymcode = evalc(evalcstr);
+    % Test for and strip out any leading whitespace characters
+    if isspace(mymcode(1))
+        mymcode(1) = [];
+    end
+    % Convert to cell array for compatibility with other routines
+    mymcode = strsplit(mymcode, '\n', 'CollapseDelimiters', 0)';
 end
 
 if uielementflag.ReplaceAppUI
@@ -175,10 +181,10 @@ if uielementflag.ReplaceAppUI
     end
     
     % Convert property declarations to backwards-compatible format
-    mymcode = fixpropertydef(mymcode, isolderthanR2014b);
+    mymcode = fixpropertydef(mymcode);
 end
 
-writemfile(mymcode, pathname, appname, isolderthanR2014b);
+writemfile(mymcode, pathname, appname);
 disp(['Successfully converted ' filename '!']);
 end
 
@@ -225,7 +231,7 @@ mymcode([1,end]) = regexprep(mymcode([1,end]), '(^.*)\[(?=classdef)|(?<=end)(\].
 end
 
 
-function [mymcode] = fixpropertydef(mymcode, oldversionflag)
+function [mymcode] = fixpropertydef(mymcode)
 % Convert property type specifications to backwards compatible format
 %
 % Starting in R2016a, the documented method to declare class property types
@@ -239,56 +245,39 @@ function [mymcode] = fixpropertydef(mymcode, oldversionflag)
 % See: http://undocumentedmatlab.com/blog/setting-class-property-types-2
 % for additional information
 
-if oldversionflag
-    % MATLAB versions older than R2014b
-    % Find where the property blocks start and end
-    propblockstart = find(~cellfun('isempty', regexp(mymcode, '^\s*properties', 'start')));
-    endstatements = find(~cellfun('isempty', regexp(mymcode, '^\s*end', 'start')));
-    if ~isempty(propblockstart)
-        % We have at least one property block
-        % Pair property block(s) with their end statement(s). Assumes that
-        % the end statement following each property closes the property
-        % block, so any logic control inside the property block will be
-        % broken
-        npropblocks = length(propblockstart);
-        propertyblockpair = zeros(npropblocks, 2);
-        for ii = 1:npropblocks
-            propertyblockpair(ii, 1) = propblockstart(ii);
-            % Find first end statement after the property block declaration
-            propertyblockpair(ii, 2) = endstatements(find(endstatements > propblockstart(ii), 1));
-            
-            % Go through the block and swap the class property type syntax
-            tmpblock = mymcode(propertyblockpair(ii,1) + 1:propertyblockpair(ii,2) - 1);
-            tmpblock = regexprep(tmpblock, '^(\s*\w+)(\s+)(?![\%])', '$1\@');
-            mymcode(propertyblockpair(ii,1) + 1:propertyblockpair(ii,2) - 1) = tmpblock;
-        end       
+% Find where the property blocks start and end
+propblockstart = find(~cellfun('isempty', regexp(mymcode, '^\s*properties', 'start')));
+endstatements = find(~cellfun('isempty', regexp(mymcode, '^\s*end', 'start')));
+if ~isempty(propblockstart)
+    % We have at least one property block
+    % Pair property block(s) with their end statement(s). Assumes that
+    % the end statement following each property closes the property
+    % block, so any logic control inside the property block will be
+    % broken
+    npropblocks = length(propblockstart);
+    propertyblockpair = zeros(npropblocks, 2);
+    for ii = 1:npropblocks
+        propertyblockpair(ii, 1) = propblockstart(ii);
+        % Find first end statement after the property block declaration
+        propertyblockpair(ii, 2) = endstatements(find(endstatements > propblockstart(ii), 1));
+        
+        % Go through the block and swap the class property type syntax
+        tmpblock = mymcode(propertyblockpair(ii,1) + 1:propertyblockpair(ii,2) - 1);
+        tmpblock = regexprep(tmpblock, '^(\s*\w+)(\s+)(?![\%])', '$1\@');
+        mymcode(propertyblockpair(ii,1) + 1:propertyblockpair(ii,2) - 1) = tmpblock;
     end
-else
-    % MATLAB versions R2014b and newer
 end
 end
 
 
-function writemfile(mymcode, pathname, appname, oldversionflag)
-% Write our m code to a file. Based on the MATLAB version used this will
-% either be in a cell array of strings (<R2014b) or a character array
-% (>=R2014b)
+function writemfile(mymcode, pathname, appname)
+% Write our m code to a file.
 fID = fopen(fullfile(pathname, sprintf('%s.m', appname)), 'w');
-if oldversionflag
-    % MATLAB versions older than R2014b
-    % Write a cell array of strings to a *.m file
-    % Assumes each cell is a separate line
-    for ii = 1:length(mymcode)
-        fprintf(fID, '%s\n', mymcode{ii});
-    end
-else
-    % MATLAB versions R2014b and newer
-    % Write a character array to a *.m file
-    % Test for and strip out any leading whitespace characters
-    if isspace(mymcode(1))
-        mymcode(1) = [];
-    end
-    fprintf(fID, '%s', mymcode);
+
+% Write a cell array of strings to a *.m file
+% Assumes each cell is a separate line
+for ii = 1:length(mymcode)
+    fprintf(fID, '%s\n', mymcode{ii});
 end
 fclose(fID);
 end
