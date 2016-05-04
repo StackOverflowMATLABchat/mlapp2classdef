@@ -173,6 +173,9 @@ if uielementflag.ReplaceAppUI
         replace = regexdict.(functionstoswap{ii}).replace;
         mymcode = regexprep(mymcode, expression, replace);
     end
+    
+    % Convert property declarations to backwards-compatible format
+    mymcode = fixpropertydef(mymcode, isolderthanR2014b);
 end
 
 writemfile(mymcode, pathname, appname, isolderthanR2014b);
@@ -219,6 +222,50 @@ function [mymcode] = stripXML(rawXML)
 % modified by MATLAB to wrap the class definition in XML
 mymcode = rawXML;
 mymcode([1,end]) = regexprep(mymcode([1,end]), '(^.*)\[(?=classdef)|(?<=end)(\].*$)', '');
+end
+
+
+function [mymcode] = fixpropertydef(mymcode, oldversionflag)
+% Convert property type specifications to backwards compatible format
+%
+% Starting in R2016a, the documented method to declare class property types
+% is to specify them after the property declaration with a space in between
+% (e.g. HeaderLength uint16). This is different from the previous
+% (undocumented) approach of separating them with the @ symbol (e.g.
+% HeaderLength@uint16). While the old undocumented approach continues to
+% function in R2016a, the documented R2016a convention is not backwards
+% compatible.
+%
+% See: http://undocumentedmatlab.com/blog/setting-class-property-types-2
+% for additional information
+
+if oldversionflag
+    % MATLAB versions older than R2014b
+    % Find where the property blocks start and end
+    propblockstart = find(~cellfun('isempty', regexp(mymcode, '^\s*properties', 'start')));
+    endstatements = find(~cellfun('isempty', regexp(mymcode, '^\s*end', 'start')));
+    if ~isempty(propblockstart)
+        % We have at least one property block
+        % Pair property block(s) with their end statement(s). Assumes that
+        % the end statement following each property closes the property
+        % block, so any logic control inside the property block will be
+        % broken
+        npropblocks = length(propblockstart);
+        propertyblockpair = zeros(npropblocks, 2);
+        for ii = 1:npropblocks
+            propertyblockpair(ii, 1) = propblockstart(ii);
+            % Find first end statement after the property block declaration
+            propertyblockpair(ii, 2) = endstatements(find(endstatements > propblockstart(ii), 1));
+            
+            % Go through the block and swap the class property type syntax
+            tmpblock = mymcode(propertyblockpair(ii,1) + 1:propertyblockpair(ii,2) - 1);
+            tmpblock = regexprep(tmpblock, '^(\s*\w+)(\s+)(?![\%])', '$1\@');
+            mymcode(propertyblockpair(ii,1) + 1:propertyblockpair(ii,2) - 1) = tmpblock;
+        end       
+    end
+else
+    % MATLAB versions R2014b and newer
+end
 end
 
 
