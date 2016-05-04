@@ -62,4 +62,4 @@ Lamp          | `uilamp`              | N/A                                  | N
 Switch        | `uiswitch`            | N/A                                  | No                   | N/A    
 UI Alert      | `uialert`             | N/A                                  | No                   | N/A    
 
-Converted GUIs will likely still require MATLAB R2014b and newer. MATLAB's App Designer heavily utilizes the dot notation for accessing properties of UI elements rather than using `set` and `get`. See [Graphics Handles Are Now Objects, Not Doubles](http://www.mathworks.com/help/matlab/graphics_transition/graphics-handles-are-now-objects-not-doubles.html) for more information.
+Most converted GUIs will likely still require MATLAB R2014b and newer. MATLAB's App Designer heavily utilizes the dot notation for accessing properties of UI elements rather than using `set` and `get`. See [Graphics Handles Are Now Objects, Not Doubles](http://www.mathworks.com/help/matlab/graphics_transition/graphics-handles-are-now-objects-not-doubles.html) for more information.
