@@ -38,9 +38,9 @@ The class definition for an App Designer GUI is embedded in an XML file located 
 
 MLAPP2CLASSDEF assumes that the targeted `*.mlapp` file is a GUI created by MATLAB's App Designer. Other packaged apps are not explicitly supported.
 
-Structure of the packaged `*.mlapp` file is assumed to be a constant (e.g. `~\matlab\document.xml` is the path to the class definition XML)
+Structure of the packaged `*.mlapp` file is assumed to be a constant (e.g. `~\matlab\document.xml` is the path to the class definition XML). This is only relevant when utilizing MLAPP2CLASSDEF in MATLAB versions older than R2014b.
 
-Replacement of App Designer specific GUI elements with their "regular" MATLAB equivalents is a work in progress. See the below table for a description of UI element support. Conversion does not take into account object properties introduced in R2016a.
+Replacement of App Designer specific GUI elements with their "regular" MATLAB equivalents is a work in progress. See the below table for a description of UI element support. Many property definitions reference components and/or properties introduced in MATLAB R2016a and cannot be robustly translated to older versions of MATLAB. These function calls are left as-is for the user to handle translation.
 
 UI Element    | App Designer Function | "Regular" MATLAB Function            | Conversion Supported | Caveats
 :------------ | :-------------------- | :----------------------------------- | :------------------: | :------
