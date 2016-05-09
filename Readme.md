@@ -12,7 +12,7 @@ The class definition for an App Designer GUI is embedded in an XML file located 
 
 `MLAPP2CLASSDEF(pathToMLapp)` processes the files specified by the user. `pathToMLapp` can be a string for a single file or a cell array of strings for multiple files. Filepaths should be absolute.
 
-`MLAPP2CLASSDEF(..., 'ReplaceAppUI', flag)` allows the user to specify whether to replace App Designer UI elements with their "regular" MATLAB equivalents (e.g. App Designer uses `uifigure` where MATLAB uses `figure`). `flag` is a boolean value whose default is `false`. To prompt the user to select a `*.mlapp` file with this syntax, pass an empty first argument (e.g. `MLAPP2CLASSDEF([], 'ReplaceAppUI', True)`).
+`MLAPP2CLASSDEF(..., 'ReplaceAppUI', flag)` allows the user to specify whether to replace App Designer UI elements with their "regular" MATLAB equivalents (e.g. App Designer uses `uifigure` where MATLAB uses `figure`). `flag` is a boolean value whose default is `false`. To prompt the user to select a `*.mlapp` file with this syntax, pass an empty first argument (e.g. `MLAPP2CLASSDEF([], 'ReplaceAppUI', true)`).
 
 ### Examples
 
