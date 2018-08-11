@@ -52,7 +52,7 @@ else
     % validateattributes won't catch if the cell array contains
     % non-strings, but the subsequent fileparts call will error if these
     % are encountered
-    pathToMLapp = validateattributes_wrapped(pathToMLapp, {'char', 'cell'}, {'vector'});
+    pathToMLapp = validateattributes_wrapped(pathToMLapp, {'char', 'cell', 'string'}, {'vector'});
     if iscell(pathToMLapp)
         [pathname, appname, ext] = cellfun(@fileparts, pathToMLapp, 'UniformOutput', false);
     else
@@ -185,7 +185,7 @@ if uielementflag.ReplaceAppUI
 end
 
 writemfile(mymcode, pathname, appname);
-disp(['Successfully converted ' filename '!']);
+disp(strcat({'Successfully converted '}, filename, '!'));
 end
 
 
